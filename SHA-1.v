@@ -21,7 +21,7 @@
 
 module SHA1(
     input CLK, nRST, START,
-    input [511:0] SHA1IN,
+    input [0:511] SHA1IN,
     output reg DONE,
     output reg [159:0] SHA1OUT
     );
@@ -53,13 +53,17 @@ reg [31:0] A, B, C, D, E; // 32 bits word buffers
 integer t;
 integer cnt;
 
-always @(posedge CLK or negedge nRST or posedge START)   // state changes at positive edge clock or negative edge reset
-if ((!nRST) || START)
+always @(posedge CLK or negedge nRST)   // state changes at positive edge clock or negative edge reset
+if (!nRST)
     state <= S0;
 else
     state <= next_state;
 
-always @(state or posedge CLK)
+always @(START)
+    if (START)
+        state <= S0;
+
+always @(posedge CLK)
 begin
     case (state)
         S0: begin   // No change, use default
@@ -138,7 +142,7 @@ begin
                 cnt = cnt + 1;           
             end
             
-        S5:     // ë§ˆì§€ë§‰
+        S5:     // ¸¶Áö¸·
             begin
                 H0 = H0 + A;
                 H1 = H1 + B;
@@ -147,14 +151,11 @@ begin
                 H4 = H4 + E;
                 DONE = 1;
                 SHA1OUT = (H0 << 128) + (H1 << 96) + (H2 << 64) + (H3 << 32) + H4;
-                @(posedge CLK);
-                DONE = 0;
-                SHA1OUT = 0;
             end
     endcase
 end
 
-always @(state or cnt or posedge START)
+always @(state or cnt or START)
 begin
     case (state)
         S0: begin
@@ -166,15 +167,15 @@ begin
                 next_state = S2;
             end
         S2: begin
-            if (cnt == 40)
+            if (cnt == 39)
                 next_state = S3;
             end
         S3: begin
-            if (cnt == 60 )
+            if (cnt == 59 )
                 next_state = S4;
             end
         S4: begin
-            if (cnt == 80)
+            if (cnt == 79)
                 next_state = S5;
             end
         S5: begin

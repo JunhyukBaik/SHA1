@@ -25,7 +25,6 @@ unsigned int K[4] = { 0x5A827999, // 0 <= k < 20
 unsigned int W[80];	// word sequence
 
 unsigned char SHA1IN[64]; // 512 bits message block
-unsigned int SHA1OUT[40]; // 160 bits output
 
 void ProcessingMessage();
 unsigned char* HextoBits(const char*);
@@ -62,14 +61,14 @@ void ProcessingMessage(void)
 	for (int t = 0; t < 16; t++) {
 		W[t] = SHA1IN[t * 4] << 24;
 		W[t] |= SHA1IN[t * 4 + 1] << 16;
-		W[t] |= SHA1IN[t * 4 + 2] << 8; 
+		W[t] |= SHA1IN[t * 4 + 2] << 8;
 		W[t] |= SHA1IN[t * 4 + 3];
-		//printf("%08X\n", W[t]);
+		//printf("W[%d]%08X\n",t, W[t]);
 	}
 
 	for (int t = 16; t < 80; t++) {
 		W[t] = CircularShift(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
-		//printf("%08X\n", W[t]);
+		//printf("W[%d]%08X\n",t, W[t]);
 	}
 
 	A = H0;
@@ -77,7 +76,7 @@ void ProcessingMessage(void)
 	C = H2;
 	D = H3;
 	E = H4;
-	temp = CircularShift(A, 5);
+	//temp = CircularShift(A, 5);
 	//cout << hex << temp << endl;
 	//printf("Round0 --> A: %X B: %X C: %X D: %X E: %X\n", A, B, C, D, E);
 
@@ -89,7 +88,7 @@ void ProcessingMessage(void)
 		C = CircularShift(B, 30);
 		B = A;
 		A = temp;
-		//printf("Round0%d --> A: %X B: %X C: %X D: %X E: %X\n", t, A, B, C, D, E);
+		printf("Round0%d --> A: %X B: %X C: %X D: %X E: %X\n", t, A, B, C, D, E);
 	}
 
 	printf("Round1 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
@@ -109,6 +108,7 @@ void ProcessingMessage(void)
 	for (int t = 40; t < 60; t++) {		// Round 3
 		temp = CircularShift(A, 5);
 		temp += (((B & C) | (B & D) | (C & D)) + E + W[t] + K[2]);
+		//unsigned int temp2 = CircularShift(A, 5) + (((B & C) | (B & D) | (C & D)) + E + W[t] + K[2]);
 		E = D;
 		D = C;
 		C = CircularShift(B, 30);

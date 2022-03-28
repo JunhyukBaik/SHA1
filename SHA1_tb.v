@@ -23,7 +23,7 @@
 module SHA1_tb;
 
 reg clk, nrst, start;
-reg [511:0] sha1in;
+reg [0:511] sha1in;
 wire [159:0] sha1out;
 wire done;
 
@@ -46,6 +46,7 @@ initial
 begin
     #30 start = 1;
     sha1in = 512'h74657374800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020;
+    //$display("%4x", (sha1in[(0 * 4) * 8 +: 8]));
     #10 start = 0;
     sha1in = 512'h0;
 end
