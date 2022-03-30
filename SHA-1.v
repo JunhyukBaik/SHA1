@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2022/03/16 13:03:59
-// Design Name: 
-// Module Name: SHA-1
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 module SHA1(
     input CLK, nRST, START,
@@ -61,38 +42,33 @@ else
 
 always @(START)
     if (START)
-        state <= S0;
+    begin
+        for (t = 0; t < 16; t = t + 1)
+            begin
+                W[t] = SHA1IN[(t * 4) * 8 +: 8] << 24;  // make 8-bits into 32-bits
+                W[t] = W[t] | ((SHA1IN[(t * 4 + 1) * 8 +: 8] << 16));
+                W[t] = W[t] | ((SHA1IN[(t * 4 + 2) * 8 +: 8] << 8));
+                W[t] = W[t] | ((SHA1IN[(t * 4 + 3) * 8 +: 8]));
+            end
+                
+        for (t = 16; t < 80; t = t + 1)
+        begin
+            W[t] = CircularShift((W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]), 1);
+        end
+    end
 
 always @(posedge CLK)
 begin
     case (state)
         S0: begin   // No change, use default
                 cnt = 0;
-                H0 = 32'h67452301;  // Default
-                H1 = 32'hEFCDAB89;
-                H2 = 32'h98BADCFE;
-                H3 = 32'h10325476;
-                H4 = 32'hC3D2E1F0;
+                A = 32'h67452301;  // Default
+                B = 32'hEFCDAB89;
+                C = 32'h98BADCFE;
+                D = 32'h10325476;
+                E = 32'hC3D2E1F0;
                 DONE = 0;
-                SHA1OUT = 0;
-                for (t = 0; t < 16; t = t + 1)
-                begin
-                    W[t] = SHA1IN[(t * 4) * 8 +: 8] << 24;  // make 8-bits into 32-bits
-                    W[t] = W[t] | ((SHA1IN[(t * 4 + 1) * 8 +: 8] << 16));
-                    W[t] = W[t] | ((SHA1IN[(t * 4 + 2) * 8 +: 8] << 8));
-                    W[t] = W[t] | ((SHA1IN[(t * 4 + 3) * 8 +: 8]));
-                end
-                
-                for (t = 16; t < 80; t = t + 1)
-                begin
-                    W[t] = CircularShift((W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]), 1);
-                end
-                  
-                A = H0;
-                B = H1;
-                C = H2;
-                D = H3;
-                E = H4;
+                SHA1OUT = 0;            
             end 
         
         S1:    // round 1

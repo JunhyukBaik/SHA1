@@ -1,10 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <string.h>
+#include <cstring>
+#include <fstream>
 #include <string>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <memory>
+#include <ctime>
 using namespace std;
 
 #define CircularShift(word, n) ((word) << (n)) | ((word) >> (32-(n))) // circular left shift operation
@@ -26,37 +28,60 @@ unsigned int W[80];	// word sequence
 
 unsigned char SHA1IN[64]; // 512 bits message block
 
-void ProcessingMessage();
+string ProcessingMessage();
 unsigned char* HextoBits(const char*);
+char DectoHex(int);
 
 int main()
 {
-	string sha1;
+	ofstream file_in("file_in.mem");
+	ofstream file_out("file_out.mem");
+	srand((unsigned int)time(NULL));
+
+	char string_tmp[129] = {0, };
+
+	for (int j = 0; j < 128; j++) {
+		int rd = rand() % 16;
+		file_in << hex << rd;
+		string_tmp[j] = DectoHex(rd);
+		cout << string_tmp[j];
+	}
+
+	
+	cout << endl << string_tmp << endl;
+	string sha1(string_tmp);  cout << endl << sha1 << endl;
+	string output;
+	
 	const char* SHA1IN_t;
 	unsigned char* temporary;
-	cout << "input 512 bit : ";
-	cin >> sha1;
-	
+	//cout << "input 512 bit : ";
+	//cin >> sha1;
 	SHA1IN_t = sha1.c_str();
 	//cout << SHA1IN_t << endl;
 	//printf("%02X\n", SHA1IN_t[1]);
-
+	
 	temporary = HextoBits(SHA1IN_t);
 	memcpy(SHA1IN, temporary, sizeof(SHA1IN));
 
-	cout << "\noutput round" << endl;
+	//cout << "\noutput round" << endl;
 
-	ProcessingMessage();
+	output = ProcessingMessage();
 
+	file_out << output;
+
+	file_out.close();
+	file_in.close();
 
 	return 0;
 }
 
 
-void ProcessingMessage(void)
+string ProcessingMessage(void)
 {
 	unsigned int temp;	// Temporary word value
 	unsigned int A, B, C, D, E;	 // 32 bits word buffers
+	stringstream hts0, hts1, hts2, hts3, hts4;
+	string s;
 
 	for (int t = 0; t < 16; t++) {
 		W[t] = SHA1IN[t * 4] << 24;
@@ -88,10 +113,10 @@ void ProcessingMessage(void)
 		C = CircularShift(B, 30);
 		B = A;
 		A = temp;
-		printf("Round0%d --> A: %X B: %X C: %X D: %X E: %X\n", t, A, B, C, D, E);
+		//printf("Round0%d --> A: %X B: %X C: %X D: %X E: %X\n", t, A, B, C, D, E);
 	}
 
-	printf("Round1 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
+	//printf("Round1 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
 
 	for (int t = 20; t < 40; t++) {		// Round 2
 		temp = CircularShift(A, 5);
@@ -103,7 +128,7 @@ void ProcessingMessage(void)
 		A = temp;
 	}
 
-	printf("Round2 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
+	//printf("Round2 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
 
 	for (int t = 40; t < 60; t++) {		// Round 3
 		temp = CircularShift(A, 5);
@@ -116,7 +141,7 @@ void ProcessingMessage(void)
 		A = temp;
 	}
 
-	printf("Round3 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
+	//printf("Round3 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
 
 	for (int t = 60; t < 80; t++) {		// Round 4
 		temp = CircularShift(A, 5);
@@ -128,7 +153,7 @@ void ProcessingMessage(void)
 		A = temp;
 	}
 
-	printf("Round4 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
+	//printf("Round4 --> A: %08X B: %08X C: %08X D: %08X E: %08X\n", A, B, C, D, E);
 
 	H0 += A;
 	H1 += B;
@@ -136,7 +161,21 @@ void ProcessingMessage(void)
 	H3 += D;
 	H4 += E;
 
+	hts0 << hex << H0;
+	s = hts0.str();
+	hts1 << hex << H1;
+	s = s + hts1.str();
+	hts2 << hex << H2;
+	s = s + hts2.str();
+	hts3 << hex << H3;
+	s = s + hts3.str();
+	hts4 << hex << H4;
+	s = s + hts4.str();
+
 	printf("\nresult: %08X%08X%08X%08X%08X\n", H0, H1, H2, H3, H4);
+	cout << "result: " << s << endl;
+
+	return s;
 }
 
 unsigned char* HextoBits(const char* hex_str) // String to bits
@@ -155,4 +194,12 @@ unsigned char* HextoBits(const char* hex_str) // String to bits
 	}
 	//cout << bits << endl;
 	return bits;
+}
+
+char DectoHex(int dec)
+{
+	if (dec < 10)
+		return (48 + dec);
+	else
+		return 65 + (dec - 10);
 }
